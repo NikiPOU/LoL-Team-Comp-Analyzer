@@ -10,15 +10,15 @@ if not API_KEY:
 
 # ------------------------------
 # CONFIG - CHANGE THESE
-GAME_NAME = "Myoutaros"  # Riot ID (Game Name)
-TAG_LINE = "EUW"             # Riot ID Tagline
+GAME_NAME = "penes envy"  # Riot ID (Game Name)
+TAG_LINE = "eee"             # Riot ID Tagline
 REGION = "europe"            # For Match-V5
 PLATFORM = "euw1"            # For Account API
 NUM_MATCHES = 5              # How many matches to fetch
 # ------------------------------
 
 # Step 1: Get PUUID from Riot ID
-account_url = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/Myoutaros/EUW"
+account_url = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/penes%20envy/eee"
 res = requests.get(account_url, headers={"X-Riot-Token": API_KEY})
 
 if res.status_code != 200:
@@ -39,6 +39,7 @@ match_ids = res.json()
 print(f"Found {len(match_ids)} Ranked Solo matches.")
 
 # Step 3: Fetch match details
+# Step 3: Fetch match details
 for match_id in match_ids:
     match_url = f"https://{REGION}.api.riotgames.com/lol/match/v5/matches/{match_id}"
     res = requests.get(match_url, headers={"X-Riot-Token": API_KEY})
@@ -46,11 +47,21 @@ for match_id in match_ids:
         print(f"Failed to fetch match {match_id}")
         continue
     match_data = res.json()
-    print(match_data.keys())
-    
-    # Basic info
     info = match_data["info"]
-    print(info["participants"])
-    #ally_champions
-    #opponent_champions
-    #win/loose
+
+    # find our player
+    me = next(p for p in info["participants"] if p["puuid"] == puuid)
+    my_team_id = me["teamId"]
+
+    # split teams
+    allies = [p["championName"] for p in info["participants"] if p["teamId"] == my_team_id]
+    enemies = [p["championName"] for p in info["participants"] if p["teamId"] != my_team_id]
+
+    # win/lose
+    did_win = me["win"]
+
+    print(f"\nMatch {match_id}")
+    print(f"Played: {me['championName']} ({me['individualPosition']})")
+    print(f"Allies: {allies}")
+    print(f"Enemies: {enemies}")
+    print(f"Result: {'WIN' if did_win else 'LOSS'}")
