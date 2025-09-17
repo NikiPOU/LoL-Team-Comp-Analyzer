@@ -1,9 +1,9 @@
-# main.py
-
 import os
 import requests
+from dotenv import load_dotenv
 
-API_KEY = ""
+load_dotenv()
+API_KEY = os.getenv("RIOT_API_KEY")
 
 if not API_KEY:
     raise ValueError("API key not found. Make sure it's set in .env as RIOT_API_KEY")
