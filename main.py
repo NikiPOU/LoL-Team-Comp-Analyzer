@@ -1,0 +1,56 @@
+# main.py
+
+import os
+import requests
+
+API_KEY = "RGAPI-c2136e39-47f7-4df0-8f85-d8f7b6bf5ae0"
+
+if not API_KEY:
+    raise ValueError("API key not found. Make sure it's set in .env as RIOT_API_KEY")
+
+# ------------------------------
+# CONFIG - CHANGE THESE
+GAME_NAME = "Myoutaros"  # Riot ID (Game Name)
+TAG_LINE = "EUW"             # Riot ID Tagline
+REGION = "europe"            # For Match-V5
+PLATFORM = "euw1"            # For Account API
+NUM_MATCHES = 5              # How many matches to fetch
+# ------------------------------
+
+# Step 1: Get PUUID from Riot ID
+account_url = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/Myoutaros/EUW"
+res = requests.get(account_url, headers={"X-Riot-Token": API_KEY})
+
+if res.status_code != 200:
+    raise Exception(f"Failed to get account info: {res.text}")
+
+account_data = res.json()
+puuid = account_data["puuid"]
+print(f"PUUID for {GAME_NAME}#{TAG_LINE}: {puuid}")
+
+# Step 2: Get Match IDs (Diamond Ranked Solo queueId=420)
+matches_url = f"https://{REGION}.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?start=0&count={NUM_MATCHES}&queue=420"
+res = requests.get(matches_url, headers={"X-Riot-Token": API_KEY})
+
+if res.status_code != 200:
+    raise Exception(f"Failed to get match IDs: {res.text}")
+
+match_ids = res.json()
+print(f"Found {len(match_ids)} Ranked Solo matches.")
+
+# Step 3: Fetch match details
+for match_id in match_ids:
+    match_url = f"https://{REGION}.api.riotgames.com/lol/match/v5/matches/{match_id}"
+    res = requests.get(match_url, headers={"X-Riot-Token": API_KEY})
+    if res.status_code != 200:
+        print(f"Failed to fetch match {match_id}")
+        continue
+    match_data = res.json()
+    print(match_data.keys())
+    
+    # Basic info
+    info = match_data["info"]
+    print(info["participants"])
+    #ally_champions
+    #opponent_champions
+    #win/loose
