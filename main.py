@@ -48,7 +48,20 @@ for match_id in match_ids:
         continue
     match_data = res.json()
     info = match_data["info"]
-    print(info["participants"])
-    #ally_champions
-    #opponent_champions
-    #win/loose
+
+    # find our player
+    me = next(p for p in info["participants"] if p["puuid"] == puuid)
+    my_team_id = me["teamId"]
+
+    # split teams
+    allies = [p["championName"] for p in info["participants"] if p["teamId"] == my_team_id]
+    enemies = [p["championName"] for p in info["participants"] if p["teamId"] != my_team_id]
+
+    # win/lose
+    did_win = me["win"]
+
+    print(f"\nMatch {match_id}")
+    print(f"Played: {me['championName']} ({me['individualPosition']})")
+    print(f"Allies: {allies}")
+    print(f"Enemies: {enemies}")
+    print(f"Result: {'WIN' if did_win else 'LOSS'}")
