@@ -2,6 +2,8 @@ import os
 import requests
 from dotenv import load_dotenv
 
+from categorization import get_category
+
 load_dotenv()
 API_KEY = os.getenv("RIOT_API_KEY")
 
