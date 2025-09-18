@@ -1,4 +1,5 @@
 # main.py
+from categorization import get_category
 
 import os
 import requests
@@ -12,13 +13,14 @@ if not API_KEY:
 # CONFIG - CHANGE THESE
 GAME_NAME = "penes envy"  # Riot ID (Game Name)
 TAG_LINE = "eee"             # Riot ID Tagline
+GAME_ID = "penes%20envy"
 REGION = "europe"            # For Match-V5
 PLATFORM = "euw1"            # For Account API
 NUM_MATCHES = 5              # How many matches to fetch
 # ------------------------------
 
 # Step 1: Get PUUID from Riot ID
-account_url = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/penes%20envy/eee"
+account_url = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{GAME_ID}/{TAG_LINE}"
 res = requests.get(account_url, headers={"X-Riot-Token": API_KEY})
 
 if res.status_code != 200:
@@ -57,11 +59,15 @@ for match_id in match_ids:
     allies = [p["championName"] for p in info["participants"] if p["teamId"] == my_team_id]
     enemies = [p["championName"] for p in info["participants"] if p["teamId"] != my_team_id]
 
+    # convert champion names to categories
+    allies_categories = [get_category(champ) for champ in allies]
+    enemies_categories = [get_category(champ) for champ in enemies]
+
     # win/lose
     did_win = me["win"]
 
     print(f"\nMatch {match_id}")
     print(f"Played: {me['championName']} ({me['individualPosition']})")
-    print(f"Allies: {allies}")
-    print(f"Enemies: {enemies}")
+    print(f"Allies (categories): {allies_categories}")
+    print(f"Enemies (categories): {enemies_categories}")
     print(f"Result: {'WIN' if did_win else 'LOSS'}")
