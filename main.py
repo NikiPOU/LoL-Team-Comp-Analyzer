@@ -10,25 +10,13 @@ if not API_KEY:
 
 # ------------------------------
 # CONFIG - CHANGE THESE
-<<<<<<< HEAD
-GAME_NAME = "penes envy"  # Riot ID (Game Name)
-TAG_LINE = "eee"             # Riot ID Tagline
-GAME_ID = "penes%20envy"
-REGION = "europe"            # For Match-V5
-PLATFORM = "euw1"            # For Account API
-=======
 GAME_NAME = "Myoutaros"  # Riot ID (Game Name)
 TAG_LINE = "EUW"             # Riot ID Tagline
->>>>>>> refs/remotes/origin/main
 NUM_MATCHES = 5              # How many matches to fetch
 # ------------------------------
 URL_GAME_NAME = GAME_NAME.replace(" ", "%20")
 # Step 1: Get PUUID from Riot ID
-<<<<<<< HEAD
-account_url = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{GAME_ID}/{TAG_LINE}"
-=======
 account_url = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{URL_GAME_NAME}/{TAG_LINE}"
->>>>>>> refs/remotes/origin/main
 res = requests.get(account_url, headers={"X-Riot-Token": API_KEY})
 
 if res.status_code != 200:
