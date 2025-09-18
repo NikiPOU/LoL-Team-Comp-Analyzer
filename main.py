@@ -1,10 +1,9 @@
-# main.py
-from categorization import get_category
-
 import os
 import requests
+from dotenv import load_dotenv
 
-API_KEY = "RGAPI-c2136e39-47f7-4df0-8f85-d8f7b6bf5ae0"
+load_dotenv()
+API_KEY = os.getenv("RIOT_API_KEY")
 
 if not API_KEY:
     raise ValueError("API key not found. Make sure it's set in .env as RIOT_API_KEY")
