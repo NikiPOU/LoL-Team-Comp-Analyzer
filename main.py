@@ -10,16 +10,25 @@ if not API_KEY:
 
 # ------------------------------
 # CONFIG - CHANGE THESE
+<<<<<<< HEAD
 GAME_NAME = "penes envy"  # Riot ID (Game Name)
 TAG_LINE = "eee"             # Riot ID Tagline
 GAME_ID = "penes%20envy"
 REGION = "europe"            # For Match-V5
 PLATFORM = "euw1"            # For Account API
+=======
+GAME_NAME = "Myoutaros"  # Riot ID (Game Name)
+TAG_LINE = "EUW"             # Riot ID Tagline
+>>>>>>> refs/remotes/origin/main
 NUM_MATCHES = 5              # How many matches to fetch
 # ------------------------------
-
+URL_GAME_NAME = GAME_NAME.replace(" ", "%20")
 # Step 1: Get PUUID from Riot ID
+<<<<<<< HEAD
 account_url = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{GAME_ID}/{TAG_LINE}"
+=======
+account_url = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{URL_GAME_NAME}/{TAG_LINE}"
+>>>>>>> refs/remotes/origin/main
 res = requests.get(account_url, headers={"X-Riot-Token": API_KEY})
 
 if res.status_code != 200:
@@ -30,7 +39,7 @@ puuid = account_data["puuid"]
 print(f"PUUID for {GAME_NAME}#{TAG_LINE}: {puuid}")
 
 # Step 2: Get Match IDs (Diamond Ranked Solo queueId=420)
-matches_url = f"https://{REGION}.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?start=0&count={NUM_MATCHES}&queue=420"
+matches_url = f"https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?start=0&count={NUM_MATCHES}&queue=420"
 res = requests.get(matches_url, headers={"X-Riot-Token": API_KEY})
 
 if res.status_code != 200:
@@ -42,7 +51,7 @@ print(f"Found {len(match_ids)} Ranked Solo matches.")
 # Step 3: Fetch match details
 # Step 3: Fetch match details
 for match_id in match_ids:
-    match_url = f"https://{REGION}.api.riotgames.com/lol/match/v5/matches/{match_id}"
+    match_url = f"https://europe.api.riotgames.com/lol/match/v5/matches/{match_id}"
     res = requests.get(match_url, headers={"X-Riot-Token": API_KEY})
     if res.status_code != 200:
         print(f"Failed to fetch match {match_id}")
