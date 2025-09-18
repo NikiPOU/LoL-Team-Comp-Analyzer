@@ -14,7 +14,7 @@ if not API_KEY:
 # CONFIG - CHANGE THESE
 GAME_NAME = "Myoutaros"  # Riot ID (Game Name)
 TAG_LINE = "EUW"             # Riot ID Tagline
-NUM_MATCHES = 5              # How many matches to fetch
+NUM_MATCHES = 15              # How many matches to fetch
 # ------------------------------
 URL_GAME_NAME = GAME_NAME.replace(" ", "%20")
 # Step 1: Get PUUID from Riot ID
