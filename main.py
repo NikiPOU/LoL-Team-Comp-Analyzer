@@ -1,5 +1,6 @@
 import os
 import requests
+import sqlite3
 from dotenv import load_dotenv
 
 from categorization import get_category
@@ -38,6 +39,12 @@ if res.status_code != 200:
 match_ids = res.json()
 print(f"Found {len(match_ids)} Ranked Solo matches.")
 
+# create database to store fetched data
+conn = sqlite3.connect("match_data.db")
+cur = conn.cursor()
+# cur.execute("CREATE TABLE matches (Match TEXT, Allies TEXT, Enemies TEXT, Result BOOLEAN)")
+conn.commit()
+
 # Step 3: Fetch match details
 # Step 3: Fetch match details
 for match_id in match_ids:
@@ -69,3 +76,8 @@ for match_id in match_ids:
     print(f"Allies (categories): {allies_categories}")
     print(f"Enemies (categories): {enemies_categories}")
     print(f"Result: {'WIN' if did_win else 'LOSS'}")
+
+    cur.execute("INSERT INTO matches (Match, Allies, Enemies, Result) VALUES (?, ?, ?, ?)",
+                (match_id, str(allies_categories), str(enemies_categories), did_win))
+    conn.commit()
+conn.close()
