@@ -40,10 +40,16 @@ match_ids = res.json()
 print(f"Found {len(match_ids)} Ranked Solo matches.")
 
 # create database to store fetched data
-conn = sqlite3.connect("match_data.db")
-cur = conn.cursor()
-# cur.execute("CREATE TABLE matches (Match TEXT, Allies TEXT, Enemies TEXT, Result BOOLEAN)")
-conn.commit()
+if not os.path.exists("match_data.db"):
+    conn = sqlite3.connect("match_data.db")
+    cur = conn.cursor()
+    cur.execute("CREATE TABLE matches (Match TEXT, Allies TEXT, Enemies TEXT, Result BOOLEAN)")
+    conn.commit()
+else:
+    conn = sqlite3.connect("match_data.db")
+    cur = conn.cursor()
+    cur.execute("DELETE FROM matches")
+    conn.commit()
 
 # Step 3: Fetch match details
 # Step 3: Fetch match details
