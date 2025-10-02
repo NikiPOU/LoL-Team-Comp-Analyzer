@@ -1,2 +1,4 @@
 .env
 __pycache__
+match_data.db
+team_comps.db
