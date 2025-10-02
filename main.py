@@ -1,6 +1,8 @@
 import os
 import requests
 import sqlite3
+import random
+import time
 from dotenv import load_dotenv
 
 from categorization import get_category
@@ -14,35 +16,17 @@ if not API_KEY:
 # CONFIG
 GAME_NAME = "Penes Envy"  # Riot ID (Game Name)
 TAG_LINE = "eee"          # Riot ID Tagline
-NUM_MATCHES = 30           # How many matches to fetch
+NUM_MATCHES = 5           # How many matches to fetch
 # ------------------------------
 
-URL_GAME_NAME = GAME_NAME.replace(" ", "%20")
-
-# ------------------------------
-# Step 1: Get PUUID
-# ------------------------------
-account_url = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{URL_GAME_NAME}/{TAG_LINE}"
-res = requests.get(account_url, headers={"X-Riot-Token": API_KEY})
-if res.status_code != 200:
-    raise Exception(f"Failed to get account info: {res.text}")
-puuid = res.json()["puuid"]
-print(f"PUUID for {GAME_NAME}#{TAG_LINE}: {puuid}")
-
-# ------------------------------
-# Step 2: Get Match IDs
-# ------------------------------
-matches_url = f"https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?start=0&count={NUM_MATCHES}&queue=420"
-res = requests.get(matches_url, headers={"X-Riot-Token": API_KEY})
-if res.status_code != 200:
-    raise Exception(f"Failed to get match IDs: {res.text}")
-match_ids = res.json()
-print(f"Found {len(match_ids)} Ranked Solo matches.")
-
+collected_matches = set()
+players = set()
+ids_to_process = [(GAME_NAME, TAG_LINE)]
 # ------------------------------
 # Step 3: Initialize Databases
 # ------------------------------
 # Raw match data
+
 conn = sqlite3.connect("match_data.db")
 cur = conn.cursor()
 cur.execute("""
@@ -68,45 +52,95 @@ CREATE TABLE IF NOT EXISTS team_comps (
 """)
 team_conn.commit()
 
-# ------------------------------
-# Step 4: Fetch & Store Matches
-# ------------------------------
-for match_id in match_ids:
-    # Skip if match already exists in raw DB
-    cur.execute("SELECT 1 FROM matches WHERE Match = ?", (match_id,))
-    if cur.fetchone():
-        print(f"Skipping match {match_id}, already in match_data.db")
+while len(collected_matches) < 200 and ids_to_process:
+    GAME_NAME, TAG_LINE = random.choice(ids_to_process)
+    ids_to_process.remove((GAME_NAME, TAG_LINE))
+    if (GAME_NAME, TAG_LINE) in players:
         continue
-
-    # Fetch match details
-    match_url = f"https://europe.api.riotgames.com/lol/match/v5/matches/{match_id}"
-    res = requests.get(match_url, headers={"X-Riot-Token": API_KEY})
+    players.add((GAME_NAME, TAG_LINE))
+    # ------------------------------
+    # Step 1: Get PUUID
+    # ------------------------------
+    URL_GAME_NAME = GAME_NAME.replace(" ", "%20")
+    account_url = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{URL_GAME_NAME}/{TAG_LINE}"
+    res = requests.get(account_url, headers={"X-Riot-Token": API_KEY})
+    
+    if res.status_code == 429:
+        print("Rate limit exceeded, sleeping for two minutes.")
+        time.sleep(120)
+        continue
+    
     if res.status_code != 200:
-        print(f"Failed to fetch match {match_id}")
+        print(f"Failed to get account info: {res.text}")
         continue
 
-    info = res.json()["info"]
+    puuid = res.json()["puuid"]
+    print(f"PUUID for {GAME_NAME}#{TAG_LINE}: {puuid}")
+    # ------------------------------
+    # Step 2: Get Match IDs
+    # ------------------------------
+    matches_url = f"https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?start=0&count={NUM_MATCHES}&queue=420"
+    res = requests.get(matches_url, headers={"X-Riot-Token": API_KEY})
+    if res.status_code != 200:
+        raise Exception(f"Failed to get match IDs: {res.text}")
+    match_ids = res.json()
+    print(f"Found {len(match_ids)} Ranked Solo matches.")
 
-    blue_team = [p["championName"] for p in info["participants"] if p["teamId"] == 100]
-    red_team = [p["championName"] for p in info["participants"] if p["teamId"] == 200]
+    # ------------------------------
+    # Step 4: Fetch & Store Matches
+    # ------------------------------
+    for match_id in match_ids:
+        # Skip if match already exists in raw DB
+        cur.execute("SELECT 1 FROM matches WHERE Match = ?", (match_id,))
+        if cur.fetchone():
+            print(f"Skipping match {match_id}, already in match_data.db")
+            continue
+        
+        if match_id in collected_matches:
+            continue
+    
+        # Fetch match details
+        match_url = f"https://europe.api.riotgames.com/lol/match/v5/matches/{match_id}"
+        res = requests.get(match_url, headers={"X-Riot-Token": API_KEY})
+        
+        if res.status_code == 429:
+            print("Rate limit exceeded, sleeping for two minutes")
+            time.sleep(120)
+            continue
+        
+        if res.status_code != 200:
+            print(f"Failed to fetch match {match_id}")
+            continue
 
-    blue_categories = sorted([get_category(c) for c in blue_team])
-    red_categories = sorted([get_category(c) for c in red_team])
+        info = res.json()["info"]
 
-    # 0 = blue win, 1 = red win
-    game_result = 0 if info["participants"][0]["win"] else 1
+        blue_team = [p["championName"] for p in info["participants"] if p["teamId"] == 100]
+        red_team = [p["championName"] for p in info["participants"] if p["teamId"] == 200]
 
-    print(f"\nMatch {match_id}")
-    print(f"Blue: {blue_categories}")
-    print(f"Red: {red_categories}")
-    print(f"Result: {'RED WIN' if game_result else 'BLUE WIN'} --> {game_result}")
+        blue_categories = sorted([get_category(c) for c in blue_team])
+        red_categories = sorted([get_category(c) for c in red_team])
 
-    # Store in raw DB
-    cur.execute(
-        "INSERT OR IGNORE INTO matches (Match, BlueTeam, RedTeam, Result) VALUES (?, ?, ?, ?)",
-        (match_id, str(blue_categories), str(red_categories), game_result)
-    )
-    conn.commit()
+        # 0 = blue win, 1 = red win
+        game_result = 0 if info["participants"][0]["win"] else 1
+
+        print(f"\nMatch {match_id}")
+        print(f"Blue: {blue_categories}")
+        print(f"Red: {red_categories}")
+        print(f"Result: {'RED WIN' if game_result else 'BLUE WIN'} --> {game_result}")
+
+        for player in info["participants"]:
+            player_id = (player["riotIdGameName"], player["riotIdTagline"])
+            if player_id not in players and player_id not in ids_to_process:
+                ids_to_process.append(player_id)
+        
+        collected_matches.add(match_id)
+
+        # Store in raw DB
+        cur.execute(
+            "INSERT OR IGNORE INTO matches (Match, BlueTeam, RedTeam, Result) VALUES (?, ?, ?, ?)",
+            (match_id, str(blue_categories), str(red_categories), game_result)
+        )
+        conn.commit()
 
 # ------------------------------
 # Step 5: Rebuild team_comps from all matches
