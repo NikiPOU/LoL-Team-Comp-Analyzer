@@ -14,8 +14,8 @@ if not API_KEY:
 
 # ------------------------------
 # CONFIG
-GAME_NAME = "Penes Envy"  # Riot ID (Game Name)
-TAG_LINE = "eee"          # Riot ID Tagline
+GAME_NAME = "Tbiggy"  # Riot ID (Game Name)
+TAG_LINE = "77777"          # Riot ID Tagline
 NUM_MATCHES = 5           # How many matches to fetch
 # ------------------------------
 
@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS team_comps (
 """)
 team_conn.commit()
 
-while len(collected_matches) < 200 and ids_to_process:
+while len(collected_matches) < 2000 and ids_to_process:
     GAME_NAME, TAG_LINE = random.choice(ids_to_process)
     ids_to_process.remove((GAME_NAME, TAG_LINE))
     if (GAME_NAME, TAG_LINE) in players:
@@ -81,6 +81,12 @@ while len(collected_matches) < 200 and ids_to_process:
     # ------------------------------
     matches_url = f"https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?start=0&count={NUM_MATCHES}&queue=420"
     res = requests.get(matches_url, headers={"X-Riot-Token": API_KEY})
+    
+    if res.status_code == 429:
+        print("Rate limit exceeded, sleeping for two minutes")
+        time.sleep(120)
+        continue
+    
     if res.status_code != 200:
         raise Exception(f"Failed to get match IDs: {res.text}")
     match_ids = res.json()
