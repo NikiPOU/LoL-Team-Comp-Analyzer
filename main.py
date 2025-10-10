@@ -13,20 +13,16 @@ if not API_KEY:
     raise ValueError("API key not found. Make sure it's set in .env as RIOT_API_KEY")
 
 # ------------------------------
-# CONFIG
 GAME_NAME = "Tbiggy"  # Riot ID (Game Name)
 TAG_LINE = "77777"          # Riot ID Tagline
-NUM_MATCHES = 5           # How many matches to fetch
+NUM_MATCHES = 5           # How many matches to fetch per account
 # ------------------------------
 
-collected_matches = set()
+collected_matches = set() #?
 players = set()
-ids_to_process = [(GAME_NAME, TAG_LINE)]
-# ------------------------------
-# Step 3: Initialize Databases
-# ------------------------------
-# Raw match data
+ids_to_process = [(GAME_NAME, TAG_LINE)] #?
 
+#Store raw match data gathered from match
 conn = sqlite3.connect("match_data.db")
 cur = conn.cursor()
 cur.execute("""
@@ -39,7 +35,7 @@ CREATE TABLE IF NOT EXISTS matches (
 """)
 conn.commit()
 
-# Aggregated team comps
+#  Team compositions data
 team_conn = sqlite3.connect("team_comps.db")
 team_cur = team_conn.cursor()
 team_cur.execute("""
@@ -58,11 +54,10 @@ while len(collected_matches) < 2000 and ids_to_process:
     if (GAME_NAME, TAG_LINE) in players:
         continue
     players.add((GAME_NAME, TAG_LINE))
-    # ------------------------------
-    # Step 1: Get PUUID
-    # ------------------------------
+
     URL_GAME_NAME = GAME_NAME.replace(" ", "%20")
     account_url = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{URL_GAME_NAME}/{TAG_LINE}"
+    
     res = requests.get(account_url, headers={"X-Riot-Token": API_KEY})
     
     if res.status_code == 429:
@@ -127,7 +122,14 @@ while len(collected_matches) < 2000 and ids_to_process:
         red_categories = sorted([get_category(c) for c in red_team])
 
         # 0 = blue win, 1 = red win
-        game_result = 0 if info["participants"][0]["win"] else 1
+        #I redid this because order is not guaranteed and the first person in the list is not guaranteed to be blue/red
+        #game_result = 0 if info["participants"][0]["win"] else 1
+
+        # Find which team won first
+        team_that_won = next(team for team in info["teams"] if team["win"])
+
+        # 0 = blue win, 1 = red win
+        game_result = 0 if team_that_won["teamId"] == 100 else 1
 
         print(f"\nMatch {match_id}")
         print(f"Blue: {blue_categories}")
