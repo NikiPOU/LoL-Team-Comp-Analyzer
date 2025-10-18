@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS team_comps (
 """)
 team_conn.commit()
 
-while len(collected_matches) < 2000 and ids_to_process:
+while len(collected_matches) < 10000 and ids_to_process:
     GAME_NAME, TAG_LINE = random.choice(ids_to_process)
     ids_to_process.remove((GAME_NAME, TAG_LINE))
     if (GAME_NAME, TAG_LINE) in players:
