@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Top Team Compositions</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-dark text-light">
+  <div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2>Top Team Compositions</h2>
+      <a href="/" class="btn btn-outline-light">← Back</a>
+    </div>
+
+    <form method="get" class="row g-2 mb-4">
+      <div class="col-md-3">
+        <label class="form-label">Sort By</label>
+        <select class="form-select" name="sort">
+          <option value="winrate" {% if sort_by == "winrate" %}selected{% endif %}>Winrate</option>
+          <option value="games" {% if sort_by == "games" %}selected{% endif %}>Sample Size</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Min Games</label>
+        <input type="number" class="form-control" name="min_games" min="0" value="{{ min_games }}">
+      </div>
+      <div class="col-md-3 align-self-end">
+        <button class="btn btn-success w-100">Apply Filters</button>
+      </div>
+      <div class="col-md-3 align-self-end">
+        <a href="/leaderboard?sort={{ sort_by }}&min_games={{ min_games }}&limit={{ limit + 20 }}" class="btn btn-outline-light w-100">Show 20 More</a>
+      </div>
+    </form>
+
+    <table class="table table-dark table-hover align-middle">
+      <thead>
+        <tr>
+          <th>Composition</th>
+          <th>Wins</th>
+          <th>Losses</th>
+          <th>Winrate</th>
+          <th>Games</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for comp, wins, losses, winrate, games in comps %}
+        <tr>
+          <td>{{ comp }}</td>
+          <td>{{ wins }}</td>
+          <td>{{ losses }}</td>
+          <td>{{ "%.2f" % (winrate*100) }}%</td>
+          <td>{{ games }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>
