@@ -1,4 +1,4 @@
-# LoL Team Composition Anayzer
+# LoL Team Composition Analyzer
 This project analyses and compares League of Legends team compositions.
 ---
 
