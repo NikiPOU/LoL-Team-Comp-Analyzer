@@ -6,8 +6,31 @@
 </head>
 <body class="bg-dark text-light">
   <div class="container py-5">
-    <h2>Top Team Compositions</h2>
-    <a href="/" class="btn btn-outline-light mb-3">← Back</a>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2>Top Team Compositions</h2>
+      <a href="/" class="btn btn-outline-light">← Back</a>
+    </div>
+
+    <form method="get" class="row g-2 mb-4">
+      <div class="col-md-3">
+        <label class="form-label">Sort By</label>
+        <select class="form-select" name="sort">
+          <option value="winrate" {% if sort_by == "winrate" %}selected{% endif %}>Winrate</option>
+          <option value="games" {% if sort_by == "games" %}selected{% endif %}>Sample Size</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Min Games</label>
+        <input type="number" class="form-control" name="min_games" min="0" value="{{ min_games }}">
+      </div>
+      <div class="col-md-3 align-self-end">
+        <button class="btn btn-success w-100">Apply Filters</button>
+      </div>
+      <div class="col-md-3 align-self-end">
+        <a href="/leaderboard?sort={{ sort_by }}&min_games={{ min_games }}&limit={{ limit + 20 }}" class="btn btn-outline-light w-100">Show 20 More</a>
+      </div>
+    </form>
+
     <table class="table table-dark table-hover align-middle">
       <thead>
         <tr>
